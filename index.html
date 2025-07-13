@@ -1,0 +1,449 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dasbor Penjualan Sanjai Alif</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Chosen Palette: Earthy Green & Warm Neutrals -->
+    <!-- Application Structure Plan: Saya merancang aplikasi ini sebagai dasbor multi-bagian dengan navigasi tab. Struktur ini (Dasbor, Produk, Pelanggan, Pesanan) dipilih karena secara intuitif memisahkan fungsi-fungsi utama manajemen bisnis, membuatnya lebih mudah dipahami daripada sekadar menampilkan tabel database mentah. Pengguna dapat dengan mudah beralih konteks dari gambaran umum (dasbor) ke detail operasional (manajemen produk/pelanggan/pesanan), yang mencerminkan alur kerja bisnis di dunia nyata dan meningkatkan kegunaan secara signifikan. -->
+    <!-- Visualization & Content Choices: 
+        - Dasbor: Menggunakan kartu metrik (Goal: Inform) untuk KPI utama dan diagram batang (Goal: Compare) untuk produk terlaris. Ini memberikan gambaran instan tentang kesehatan bisnis. Chart.js digunakan untuk visualisasi dinamis.
+        - Manajemen Produk/Pelanggan: Menggunakan tabel HTML interaktif dengan fungsionalitas pencarian (Goal: Organize). Ini memungkinkan pengelolaan data yang efisien. Formulir di sampingnya digunakan untuk entri/pembaruan data.
+        - Manajemen Pesanan: Menerapkan tata letak master-detail (Goal: Relationships). Daftar pesanan utama dan tampilan detail pesanan yang terkait saat diklik. Ini secara efektif menunjukkan hubungan one-to-many antara pesanan dan detailnya. Semua interaksi didukung oleh Vanilla JS, tanpa SVG atau Mermaid. 
+    -->
+    <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
+    <style>
+        body { font-family: 'Inter', sans-serif; background-color: #FDFBF7; }
+        .chart-container { position: relative; width: 100%; max-width: 600px; margin-left: auto; margin-right: auto; height: 300px; max-height: 400px; }
+        @media (min-width: 768px) { .chart-container { height: 350px; } }
+        .nav-item { transition: all 0.2s ease-in-out; }
+        .nav-item.active { background-color: #2E7D32; color: white; }
+        .nav-item:not(.active):hover { background-color: #E8F5E9; }
+        .table-auto th { background-color: #F1F8E9; }
+        .table-auto tr:nth-child(even) { background-color: #FAFAFA; }
+        .table-auto tr:hover { background-color: #E8F5E9; }
+    </style>
+</head>
+<body class="text-gray-800">
+
+    <div class="flex flex-col md:flex-row min-h-screen">
+        <!-- Sidebar Navigation -->
+        <aside class="w-full md:w-64 bg-white shadow-md">
+            <div class="p-6">
+                <h1 class="text-2xl font-bold text-green-800">Sanjai Alif</h1>
+                <p class="text-sm text-gray-500">Dasbor Penjualan</p>
+            </div>
+            <nav class="mt-4">
+                <a href="#dashboard" id="nav-dashboard" class="nav-item active flex items-center py-3 px-6 text-gray-700">
+                    <span class="mr-3">📊</span> Dasbor
+                </a>
+                <a href="#produk" id="nav-produk" class="nav-item flex items-center py-3 px-6 text-gray-700">
+                    <span class="mr-3">📦</span> Produk
+                </a>
+                <a href="#pelanggan" id="nav-pelanggan" class="nav-item flex items-center py-3 px-6 text-gray-700">
+                    <span class="mr-3">👥</span> Pelanggan
+                </a>
+                <a href="#pesanan" id="nav-pesanan" class="nav-item flex items-center py-3 px-6 text-gray-700">
+                    <span class="mr-3">🧾</span> Pesanan
+                </a>
+            </nav>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="flex-1 p-4 sm:p-6 md:p-10 bg-gray-50">
+            
+            <!-- Dashboard Section -->
+            <div id="view-dashboard" class="space-y-8">
+                <div>
+                    <h2 class="text-3xl font-bold">Selamat Datang, Jecky!</h2>
+                    <p class="text-gray-600">Berikut adalah ringkasan penjualan Sanjai Alif hari ini.</p>
+                </div>
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+                    <div class="bg-white p-6 rounded-lg shadow">
+                        <h3 class="text-sm font-medium text-gray-500">Total Pendapatan</h3>
+                        <p id="total-pendapatan" class="text-3xl font-bold mt-2">Rp 0</p>
+                    </div>
+                    <div class="bg-white p-6 rounded-lg shadow">
+                        <h3 class="text-sm font-medium text-gray-500">Jumlah Pesanan</h3>
+                        <p id="jumlah-pesanan" class="text-3xl font-bold mt-2">0</p>
+                    </div>
+                    <div class="bg-white p-6 rounded-lg shadow">
+                        <h3 class="text-sm font-medium text-gray-500">Pelanggan Baru</h3>
+                        <p id="pelanggan-baru" class="text-3xl font-bold mt-2">0</p>
+                    </div>
+                    <div class="bg-white p-6 rounded-lg shadow">
+                        <h3 class="text-sm font-medium text-gray-500">Produk Terjual</h3>
+                        <p id="produk-terjual" class="text-3xl font-bold mt-2">0</p>
+                    </div>
+                </div>
+                <div class="bg-white p-6 rounded-lg shadow">
+                    <h3 class="text-lg font-semibold mb-4">Produk Terlaris</h3>
+                    <div class="chart-container h-64 md:h-80">
+                        <canvas id="produkTerlarisChart"></canvas>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Produk Section -->
+            <div id="view-produk" class="hidden">
+                <h2 class="text-3xl font-bold mb-6">Manajemen Produk</h2>
+                <div class="bg-white p-6 rounded-lg shadow">
+                     <div class="flex justify-between items-center mb-4">
+                        <h3 class="text-lg font-semibold">Daftar Produk</h3>
+                        <input type="text" id="search-produk" placeholder="Cari produk..." class="border rounded px-3 py-1">
+                    </div>
+                    <div class="overflow-x-auto">
+                        <table class="table-auto w-full text-left">
+                            <thead>
+                                <tr>
+                                    <th class="px-4 py-2">ID</th>
+                                    <th class="px-4 py-2">Nama Produk</th>
+                                    <th class="px-4 py-2">Harga</th>
+                                    <th class="px-4 py-2">Stok</th>
+                                </tr>
+                            </thead>
+                            <tbody id="produk-table-body">
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Pelanggan Section -->
+            <div id="view-pelanggan" class="hidden">
+                <h2 class="text-3xl font-bold mb-6">Manajemen Pelanggan</h2>
+                <div class="bg-white p-6 rounded-lg shadow">
+                    <div class="flex justify-between items-center mb-4">
+                        <h3 class="text-lg font-semibold">Daftar Pelanggan</h3>
+                        <input type="text" id="search-pelanggan" placeholder="Cari pelanggan..." class="border rounded px-3 py-1">
+                    </div>
+                    <div class="overflow-x-auto">
+                        <table class="table-auto w-full text-left">
+                            <thead>
+                                <tr>
+                                    <th class="px-4 py-2">ID</th>
+                                    <th class="px-4 py-2">Nama Pelanggan</th>
+                                    <th class="px-4 py-2">Alamat</th>
+                                    <th class="px-4 py-2">No. Telepon</th>
+                                    <th class="px-4 py-2">Email</th>
+                                </tr>
+                            </thead>
+                            <tbody id="pelanggan-table-body">
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Pesanan Section -->
+            <div id="view-pesanan" class="hidden">
+                 <h2 class="text-3xl font-bold mb-6">Manajemen Pesanan</h2>
+                 <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                    <div class="lg:col-span-2 bg-white p-6 rounded-lg shadow">
+                        <div class="flex justify-between items-center mb-4">
+                           <h3 class="text-lg font-semibold">Daftar Pesanan</h3>
+                            <select id="filter-status" class="border rounded px-3 py-1">
+                                <option value="all">Semua Status</option>
+                                <option value="Pending">Pending</option>
+                                <option value="Selesai">Selesai</option>
+                                <option value="Batal">Batal</option>
+                            </select>
+                        </div>
+                        <div class="overflow-x-auto">
+                            <table class="table-auto w-full text-left">
+                                <thead>
+                                    <tr>
+                                        <th class="px-4 py-2">ID Pesanan</th>
+                                        <th class="px-4 py-2">Nama Pelanggan</th>
+                                        <th class="px-4 py-2">Tanggal</th>
+                                        <th class="px-4 py-2">Total</th>
+                                        <th class="px-4 py-2">Status</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="pesanan-table-body">
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                    <div class="bg-white p-6 rounded-lg shadow">
+                        <h3 class="text-lg font-semibold">Detail Pesanan</h3>
+                        <div id="pesanan-detail-view" class="mt-4 text-gray-600">
+                           <p>Pilih pesanan untuk melihat detail.</p>
+                        </div>
+                    </div>
+                 </div>
+            </div>
+
+        </main>
+    </div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    
+    // MOCK DATA based on the provided PDF schema
+    const mockData = {
+        produk: [
+            { id_produk: 1, nama_produk: 'Sanjai Balado Pedas', harga: 15000, Stok: 50, deskripsi: 'Keripik singkong renyah dengan bumbu balado pedas.' },
+            { id_produk: 2, nama_produk: 'Sanjai Manis Gurih', harga: 14000, Stok: 45, deskripsi: 'Keripik singkong dengan lapisan gula karamel.' },
+            { id_produk: 3, nama_produk: 'Keripik Ubi Ungu', harga: 18000, Stok: 30, deskripsi: 'Keripik renyah dari ubi ungu asli.' },
+            { id_produk: 4, nama_produk: 'Karak Kaliang 88', harga: 12000, Stok: 70, deskripsi: 'Camilan khas berbentuk angka 8.' },
+            { id_produk: 5, nama_produk: 'Dakak-Dakak', harga: 20000, Stok: 25, deskripsi: 'Keripik singkong kotak kecil pedas.' },
+        ],
+        pelanggan: [
+            { id_pelanggan: 1, nama_pelanggan: 'Budi Santoso', alamat: 'Jl. Merdeka No. 10, Jakarta', no_telepon: '081234567890', email: 'budi.s@example.com' },
+            { id_pelanggan: 2, nama_pelanggan: 'Citra Lestari', alamat: 'Jl. Pahlawan No. 5, Surabaya', no_telepon: '082345678901', email: 'citra.l@example.com' },
+            { id_pelanggan: 3, nama_pelanggan: 'Agus Wijaya', alamat: 'Jl. Diponegoro No. 15, Bandung', no_telepon: '083456789012', email: 'agus.w@example.com' },
+            { id_pelanggan: 4, nama_pelanggan: 'Dewi Anggraini', alamat: 'Jl. Sudirman No. 20, Medan', no_telepon: '084567890123', email: 'dewi.a@example.com' },
+        ],
+        pesanan: [
+            { id_pesanan: 101, id_pelanggan: 1, tanggal_pesanan: '2025-06-25', jumlah: 48000, status_pesanan: 'Selesai' },
+            { id_pesanan: 102, id_pelanggan: 2, tanggal_pesanan: '2025-06-26', jumlah: 36000, status_pesanan: 'Selesai' },
+            { id_pesanan: 103, id_pelanggan: 1, tanggal_pesanan: '2025-06-26', jumlah: 44000, status_pesanan: 'Pending' },
+            { id_pesanan: 104, id_pelanggan: 3, tanggal_pesanan: '2025-06-24', jumlah: 15000, status_pesanan: 'Batal' },
+            { id_pesanan: 105, id_pelanggan: 4, tanggal_pesanan: '2025-06-26', jumlah: 32000, status_pesanan: 'Pending' },
+        ],
+        detail_pesanan: [
+            { id_detail_pesanan: 1, id_pesanan: 101, id_produk: 1, kuantitas: 2, Total_bayar: 30000 },
+            { id_detail_pesanan: 2, id_pesanan: 101, id_produk: 4, kuantitas: 1, Total_bayar: 12000 },
+            { id_detail_pesanan: 3, id_pesanan: 102, id_produk: 2, kuantitas: 1, Total_bayar: 14000 },
+            { id_detail_pesanan: 4, id_pesanan: 102, id_produk: 3, kuantitas: 1, Total_bayar: 18000 },
+            { id_detail_pesanan: 5, id_pesanan: 103, id_produk: 5, kuantitas: 1, Total_bayar: 20000 },
+            { id_detail_pesanan: 6, id_pesanan: 103, id_produk: 1, kuantitas: 1, Total_bayar: 15000 },
+            { id_detail_pesanan: 7, id_pesanan: 104, id_produk: 1, kuantitas: 1, Total_bayar: 15000 },
+            { id_detail_pesanan: 8, id_pesanan: 105, id_produk: 2, kuantitas: 1, Total_bayar: 14000 },
+            { id_detail_pesanan: 9, id_pesanan: 105, id_produk: 4, kuantitas: 1, Total_bayar: 12000 },
+        ]
+    };
+
+    // Navigation Logic
+    const navItems = document.querySelectorAll('.nav-item');
+    const views = document.querySelectorAll('[id^="view-"]');
+    
+    function switchView(viewId) {
+        views.forEach(view => view.classList.add('hidden'));
+        navItems.forEach(nav => nav.classList.remove('active'));
+        
+        document.getElementById(`view-${viewId}`).classList.remove('hidden');
+        document.getElementById(`nav-${viewId}`).classList.add('active');
+    }
+
+    navItems.forEach(item => {
+        item.addEventListener('click', (e) => {
+            e.preventDefault();
+            const viewId = e.currentTarget.id.split('-')[1];
+            switchView(viewId);
+        });
+    });
+    
+    function formatRupiah(angka) {
+        return new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(angka);
+    }
+
+    // Dashboard Logic
+    function initDashboard() {
+        const totalPendapatan = mockData.pesanan
+            .filter(p => p.status_pesanan === 'Selesai')
+            .reduce((sum, p) => sum + p.jumlah, 0);
+        document.getElementById('total-pendapatan').textContent = formatRupiah(totalPendapatan);
+        
+        const jumlahPesanan = mockData.pesanan.length;
+        document.getElementById('jumlah-pesanan').textContent = jumlahPesanan;
+        
+        const pelangganBaru = mockData.pelanggan.length; // Simple count for demo
+        document.getElementById('pelanggan-baru').textContent = pelangganBaru;
+
+        const produkTerjual = mockData.detail_pesanan
+            .filter(dp => mockData.pesanan.find(p => p.id_pesanan === dp.id_pesanan && p.status_pesanan === 'Selesai'))
+            .reduce((sum, dp) => sum + dp.kuantitas, 0);
+        document.getElementById('produk-terjual').textContent = produkTerjual;
+
+        // Chart.js - Produk Terlaris
+        const produkSales = {};
+        mockData.detail_pesanan.forEach(detail => {
+            const pesanan = mockData.pesanan.find(p => p.id_pesanan === detail.id_pesanan);
+            if(pesanan && pesanan.status_pesanan === 'Selesai') {
+                const produk = mockData.produk.find(p => p.id_produk === detail.id_produk);
+                if (produk) {
+                    if (produkSales[produk.nama_produk]) {
+                        produkSales[produk.nama_produk] += detail.kuantitas;
+                    } else {
+                        produkSales[produk.nama_produk] = detail.kuantitas;
+                    }
+                }
+            }
+        });
+
+        const sortedProduk = Object.entries(produkSales).sort(([,a],[,b]) => b-a);
+        const labels = sortedProduk.map(item => item[0]);
+        const data = sortedProduk.map(item => item[1]);
+
+        const ctx = document.getElementById('produkTerlarisChart').getContext('2d');
+        new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: labels,
+                datasets: [{
+                    label: 'Jumlah Terjual',
+                    data: data,
+                    backgroundColor: 'rgba(76, 175, 80, 0.5)',
+                    borderColor: 'rgba(76, 175, 80, 1)',
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    y: {
+                        beginAtZero: true
+                    },
+                    x: {
+                        ticks: {
+                            autoSkip: false,
+                            maxRotation: 45,
+                            minRotation: 45
+                        }
+                    }
+                },
+                plugins: {
+                    legend: {
+                        display: false
+                    },
+                     tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                return ` Terjual: ${context.parsed.y} pcs`;
+                            }
+                        }
+                    }
+                }
+            }
+        });
+    }
+
+    // Produk Logic
+    const produkTableBody = document.getElementById('produk-table-body');
+    const searchProduk = document.getElementById('search-produk');
+
+    function renderProduk(filter = '') {
+        produkTableBody.innerHTML = '';
+        mockData.produk
+            .filter(p => p.nama_produk.toLowerCase().includes(filter.toLowerCase()))
+            .forEach(p => {
+                const row = `<tr>
+                    <td class="border px-4 py-2">${p.id_produk}</td>
+                    <td class="border px-4 py-2">${p.nama_produk}</td>
+                    <td class="border px-4 py-2">${formatRupiah(p.harga)}</td>
+                    <td class="border px-4 py-2">${p.Stok}</td>
+                </tr>`;
+                produkTableBody.innerHTML += row;
+            });
+    }
+    searchProduk.addEventListener('input', (e) => renderProduk(e.target.value));
+    
+    // Pelanggan Logic
+    const pelangganTableBody = document.getElementById('pelanggan-table-body');
+    const searchPelanggan = document.getElementById('search-pelanggan');
+
+    function renderPelanggan(filter = '') {
+        pelangganTableBody.innerHTML = '';
+        mockData.pelanggan
+            .filter(p => p.nama_pelanggan.toLowerCase().includes(filter.toLowerCase()))
+            .forEach(p => {
+                const row = `<tr>
+                    <td class="border px-4 py-2">${p.id_pelanggan}</td>
+                    <td class="border px-4 py-2">${p.nama_pelanggan}</td>
+                    <td class="border px-4 py-2">${p.alamat}</td>
+                    <td class="border px-4 py-2">${p.no_telepon}</td>
+                    <td class="border px-4 py-2">${p.email}</td>
+                </tr>`;
+                pelangganTableBody.innerHTML += row;
+            });
+    }
+    searchPelanggan.addEventListener('input', (e) => renderPelanggan(e.target.value));
+
+    // Pesanan Logic
+    const pesananTableBody = document.getElementById('pesanan-table-body');
+    const filterStatus = document.getElementById('filter-status');
+    const pesananDetailView = document.getElementById('pesanan-detail-view');
+
+    function renderDetailPesanan(id_pesanan) {
+        const pesanan = mockData.pesanan.find(p => p.id_pesanan === id_pesanan);
+        const detailItems = mockData.detail_pesanan.filter(dp => dp.id_pesanan === id_pesanan);
+        const pelanggan = mockData.pelanggan.find(p => p.id_pelanggan === pesanan.id_pelanggan);
+
+        let html = `<h4 class="font-bold text-lg mb-2">Pesanan #${id_pesanan}</h4>
+        <p><strong>Pelanggan:</strong> ${pelanggan.nama_pelanggan}</p>
+        <p><strong>Tanggal:</strong> ${pesanan.tanggal_pesanan}</p>
+        <p><strong>Status:</strong> <span class="font-semibold">${pesanan.status_pesanan}</span></p>
+        <hr class="my-3">
+        <h5 class="font-semibold mb-2">Item:</h5>
+        <ul class="space-y-1 text-sm">`;
+        
+        detailItems.forEach(item => {
+            const produk = mockData.produk.find(p => p.id_produk === item.id_produk);
+            html += `<li class="flex justify-between">
+                        <span>${produk.nama_produk} (x${item.kuantitas})</span>
+                        <span>${formatRupiah(item.Total_bayar)}</span>
+                     </li>`;
+        });
+
+        html += `</ul><hr class="my-2">
+                 <div class="flex justify-between font-bold">
+                    <span>Total</span>
+                    <span>${formatRupiah(pesanan.jumlah)}</span>
+                 </div>`;
+        pesananDetailView.innerHTML = html;
+    }
+
+    function renderPesanan(statusFilter = 'all') {
+        pesananTableBody.innerHTML = '';
+        pesananDetailView.innerHTML = '<p>Pilih pesanan untuk melihat detail.</p>';
+
+        mockData.pesanan
+            .filter(p => statusFilter === 'all' || p.status_pesanan === statusFilter)
+            .forEach(p => {
+                const pelanggan = mockData.pelanggan.find(pl => pl.id_pelanggan === p.id_pelanggan);
+                const statusColor = {
+                    'Selesai': 'text-green-600 bg-green-100',
+                    'Pending': 'text-yellow-600 bg-yellow-100',
+                    'Batal': 'text-red-600 bg-red-100'
+                };
+                const row = `<tr data-id="${p.id_pesanan}" class="cursor-pointer">
+                    <td class="border px-4 py-2">${p.id_pesanan}</td>
+                    <td class="border px-4 py-2">${pelanggan.nama_pelanggan}</td>
+                    <td class="border px-4 py-2">${p.tanggal_pesanan}</td>
+                    <td class="border px-4 py-2">${formatRupiah(p.jumlah)}</td>
+                    <td class="border px-4 py-2"><span class="px-2 py-1 rounded-full text-xs font-medium ${statusColor[p.status_pesanan]}">${p.status_pesanan}</span></td>
+                </tr>`;
+                pesananTableBody.innerHTML += row;
+            });
+
+        // Add event listeners to new rows
+        document.querySelectorAll('#pesanan-table-body tr').forEach(row => {
+            row.addEventListener('click', (e) => {
+                 document.querySelectorAll('#pesanan-table-body tr').forEach(r => r.classList.remove('bg-green-200'));
+                 e.currentTarget.classList.add('bg-green-200');
+                 const id = parseInt(e.currentTarget.getAttribute('data-id'));
+                 renderDetailPesanan(id);
+            });
+        });
+    }
+    filterStatus.addEventListener('change', (e) => renderPesanan(e.target.value));
+
+    // Initial Load
+    switchView('dashboard');
+    initDashboard();
+    renderProduk();
+    renderPelanggan();
+    renderPesanan();
+});
+</script>
+
+</body>
+</html>
