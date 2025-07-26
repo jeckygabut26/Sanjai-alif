@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login Admin - Toko Alif Keripik Sanjai</title>
+    <link rel="stylesheet" href="../css/style.css">
+    <style>
+        /* Khusus Halaman Login */
+        body {
+            background-color: #f5f5f5;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        .login-container {
+            background-color: white;
+            border-radius: 10px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+            width: 100%;
+            max-width: 400px;
+            padding: 40px;
+            text-align: center;
+        }
+
+        .logo-login {
+            width: 150px;
+            margin-bottom: 20px;
+        }
+
+        h2 {
+            color: #333;
+            margin-bottom: 30px;
+        }
+
+        .input-group {
+            margin-bottom: 20px;
+            text-align: left;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            color: #555;
+            font-weight: 600;
+        }
+
+        input[type="text"],
+        input[type="password"] {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 16px;
+            transition: border 0.3s;
+        }
+
+        input[type="text"]:focus,
+        input[type="password"]:focus {
+            border-color: #e74c3c;
+            outline: none;
+        }
+
+        .btn-login {
+            background-color: #e74c3c;
+            color: white;
+            border: none;
+            padding: 12px;
+            width: 100%;
+            border-radius: 5px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.3s;
+            margin-top: 10px;
+        }
+
+        .btn-login:hover {
+            background-color: #c0392b;
+        }
+
+        .error-message {
+            color: #e74c3c;
+            margin-top: 15px;
+            display: none;
+        }
+
+        .remember-forgot {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            font-size: 14px;
+        }
+
+        .remember-me {
+            display: flex;
+            align-items: center;
+        }
+
+        .remember-me input {
+            margin-right: 5px;
+        }
+
+        .forgot-password a {
+            color: #e74c3c;
+            text-decoration: none;
+        }
+
+        @media (max-width: 480px) {
+            .login-container {
+                padding: 30px 20px;
+                margin: 0 15px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="login-container">
+        <img src="../images/logo.png" alt="Logo Toko Alif" class="logo-login">
+        <h2>Login Admin</h2>
+        
+        <form id="loginForm">
+            <div class="input-group">
+                <label for="username">Username</label>
+                <input type="text" id="username" name="username" placeholder="Masukkan username" required>
+            </div>
+            
+            <div class="input-group">
+                <label for="password">Password</label>
+                <input type="password" id="password" name="password" placeholder="Masukkan password" required>
+            </div>
+            
+            <div class="remember-forgot">
+                <div class="remember-me">
+                    <input type="checkbox" id="remember">
+                    <label for="remember">Ingat saya</label>
+                </div>
+                <div class="forgot-password">
+                    <a href="#">Lupa password?</a>
+                </div>
+            </div>
+            
+            <button type="submit" class="btn-login">Masuk</button>
+            
+            <div id="errorMessage" class="error-message">
+                Username atau password salah!
+            </div>
+        </form>
+    </div>
+
+    <script>
+        document.getElementById('loginForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            // Data login admin (bisa diganti dengan validasi ke database)
+            const adminCredentials = {
+                username: "admin",
+                password: "admin123"
+            };
+            
+            const username = document.getElementById('username').value;
+            const password = document.getElementById('password').value;
+            const rememberMe = document.getElementById('remember').checked;
+            
+            // Validasi login
+            if(username === adminCredentials.username && password === adminCredentials.password) {
+                // Simpan ke localStorage jika remember me dicentang
+                if(rememberMe) {
+                    localStorage.setItem('adminAuth', JSON.stringify({
+                        username: username,
+                        loggedIn: true
+                    }));
+                } else {
+                    sessionStorage.setItem('adminAuth', JSON.stringify({
+                        username: username,
+                        loggedIn: true
+                    }));
+                }
+                
+                // Redirect ke dashboard admin
+                window.location.href = "dashboard.html";
+            } else {
+                document.getElementById('errorMessage').style.display = 'block';
+            }
+        });
+
+        // Cek jika sudah login
+        document.addEventListener('DOMContentLoaded', function() {
+            const localAuth = localStorage.getItem('adminAuth');
+            const sessionAuth = sessionStorage.getItem('adminAuth');
+            
+            if(localAuth && JSON.parse(localAuth).loggedIn) {
+                window.location.href = "dashboard.html";
+            } else if(sessionAuth && JSON.parse(sessionAuth).loggedIn) {
+                window.location.href = "dashboard.html";
+            }
+        });
+    </script>
+</body>
+</html>

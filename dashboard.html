@@ -1,0 +1,497 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard Admin - Toko Alif Keripik Sanjai</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        :root {
+            --primary: #e74c3c;
+            --dark: #343a40;
+            --light: #f8f9fa;
+            --success: #28a745;
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        body {
+            background-color: #f5f5f5;
+            display: flex;
+            min-height: 100vh;
+        }
+        
+        /* Sidebar */
+        .sidebar {
+            width: 250px;
+            background: var(--dark);
+            color: white;
+            transition: all 0.3s;
+            position: fixed;
+            height: 100vh;
+        }
+        
+        .sidebar-header {
+            padding: 20px;
+            background: rgba(0, 0, 0, 0.2);
+            text-align: center;
+        }
+        
+        .sidebar-header img {
+            height: 50px;
+        }
+        
+        .sidebar-menu {
+            padding: 20px 0;
+        }
+        
+        .sidebar-menu li {
+            list-style: none;
+            padding: 10px 20px;
+            border-left: 3px solid transparent;
+            transition: all 0.3s;
+        }
+        
+        .sidebar-menu li:hover {
+            background: rgba(0, 0, 0, 0.1);
+            border-left: 3px solid var(--primary);
+        }
+        
+        .sidebar-menu li.active {
+            background: rgba(0, 0, 0, 0.1);
+            border-left: 3px solid var(--primary);
+        }
+        
+        .sidebar-menu a {
+            color: white;
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+        }
+        
+        .sidebar-menu i {
+            margin-right: 10px;
+            font-size: 1.1rem;
+        }
+        
+        /* Main Content */
+        .main-content {
+            flex: 1;
+            margin-left: 250px;
+            transition: all 0.3s;
+        }
+        
+        /* Navbar */
+        .navbar {
+            padding: 15px 20px;
+            background: white;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+        }
+        
+        .menu-toggle {
+            display: none;
+            cursor: pointer;
+            font-size: 1.5rem;
+        }
+        
+        .user-menu {
+            display: flex;
+            align-items: center;
+        }
+        
+        .user-menu img {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            margin-right: 10px;
+        }
+        
+        /* Dashboard Cards */
+        .card-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+            gap: 20px;
+            padding: 20px;
+        }
+        
+        .card {
+            background: white;
+            border-radius: 10px;
+            padding: 20px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+        }
+        
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+        
+        .card-icon {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+        }
+        
+        .card-icon.blue { background: #3498db; }
+        .card-icon.green { background: var(--success); }
+        .card-icon.orange { background: #f39c12; }
+        .card-icon.red { background: var(--primary); }
+        
+        .card h3 {
+            font-size: 1.8rem;
+            margin-bottom: 5px;
+        }
+        
+        .card p {
+            color: #6c757d;
+        }
+        
+        /* Recent Orders */
+        .content-section {
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+            margin: 20px;
+            padding: 20px;
+        }
+        
+        .section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid #eee;
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        
+        th, td {
+            padding: 12px 15px;
+            text-align: left;
+            border-bottom: 1px solid #eee;
+        }
+        
+        th {
+            background: #f8f9fa;
+            font-weight: 600;
+        }
+        
+        tr:hover {
+            background: #f8f9fa;
+        }
+        
+        .status {
+            padding: 5px 10px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 600;
+        }
+        
+        .status.pending { background: #fff3cd; color: #856404; }
+        .status.proses { background: #cce5ff; color: #004085; }
+        .status.selesai { background: #d4edda; color: #155724; }
+        .status.batal { background: #f8d7da; color: #721c24; }
+        
+        .btn {
+            padding: 5px 10px;
+            border-radius: 5px;
+            border: none;
+            cursor: pointer;
+            font-weight: 500;
+        }
+        
+        .btn-primary {
+            background: var(--primary);
+            color: white;
+        }
+        
+        .btn-sm {
+            padding: 3px 8px;
+            font-size: 0.8rem;
+        }
+        
+        /* Responsive */
+        @media (max-width: 768px) {
+            .sidebar {
+                margin-left: -250px;
+            }
+            
+            .sidebar.active {
+                margin-left: 0;
+            }
+            
+            .main-content {
+                margin-left: 0;
+            }
+            
+            .menu-toggle {
+                display: block;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Sidebar -->
+    <div class="sidebar" id="sidebar">
+        <div class="sidebar-header">
+            <img src="../images/logo-white.png" alt="Toko Alif">
+        </div>
+        <ul class="sidebar-menu">
+            <li class="active">
+                <a href="dashboard.html">
+                    <i class="fas fa-tachometer-alt"></i> Dashboard
+                </a>
+            </li>
+            <li>
+                <a href="produk.html">
+                    <i class="fas fa-box-open"></i> Produk
+                </a>
+            </li>
+            <li>
+                <a href="pesanan.html">
+                    <i class="fas fa-shopping-cart"></i> Pesanan
+                </a>
+            </li>
+            <li>
+                <a href="pelanggan.html">
+                    <i class="fas fa-users"></i> Pelanggan
+                </a>
+            </li>
+            <li>
+                <a href="laporan.html">
+                    <i class="fas fa-chart-bar"></i> Laporan
+                </a>
+            </li>
+            <li>
+                <a href="pengaturan.html">
+                    <i class="fas fa-cog"></i> Pengaturan
+                </a>
+            </li>
+            <li>
+                <a href="#" id="logout">
+                    <i class="fas fa-sign-out-alt"></i> Logout
+                </a>
+            </li>
+        </ul>
+    </div>
+
+    <!-- Main Content -->
+    <div class="main-content">
+        <!-- Navbar -->
+        <nav class="navbar">
+            <div class="menu-toggle" id="menuToggle">
+                <i class="fas fa-bars"></i>
+            </div>
+            <div class="user-menu">
+                <img src="../images/admin-avatar.jpg" alt="Admin">
+                <span>Admin Toko Alif</span>
+            </div>
+        </nav>
+
+        <!-- Dashboard Content -->
+        <div class="card-container">
+            <div class="card">
+                <div class="card-header">
+                    <div>
+                        <h3>1,254</h3>
+                        <p>Total Penjualan</p>
+                    </div>
+                    <div class="card-icon blue">
+                        <i class="fas fa-shopping-cart"></i>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="card">
+                <div class="card-header">
+                    <div>
+                        <h3>Rp 28,450,000</h3>
+                        <p>Pendapatan Bulan Ini</p>
+                    </div>
+                    <div class="card-icon green">
+                        <i class="fas fa-money-bill-wave"></i>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="card">
+                <div class="card-header">
+                    <div>
+                        <h3>56</h3>
+                        <p>Pesanan Baru</p>
+                    </div>
+                    <div class="card-icon orange">
+                        <i class="fas fa-clipboard-list"></i>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="card">
+                <div class="card-header">
+                    <div>
+                        <h3>328</h3>
+                        <p>Pelanggan</p>
+                    </div>
+                    <div class="card-icon red">
+                        <i class="fas fa-users"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Recent Orders -->
+        <div class="content-section">
+            <div class="section-header">
+                <h3>Pesanan Terbaru</h3>
+                <a href="pesanan.html" class="btn btn-primary">Lihat Semua</a>
+            </div>
+            <table>
+                <thead>
+                    <tr>
+                        <th>ID Pesanan</th>
+                        <th>Pelanggan</th>
+                        <th>Tanggal</th>
+                        <th>Total</th>
+                        <th>Status</th>
+                        <th>Aksi</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>#ALF-2023-001</td>
+                        <td>Budi Santoso</td>
+                        <td>12 Jan 2023</td>
+                        <td>Rp 125,000</td>
+                        <td><span class="status proses">Proses</span></td>
+                        <td>
+                            <button class="btn btn-primary btn-sm">Detail</button>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>#ALF-2023-002</td>
+                        <td>Ani Wijaya</td>
+                        <td>11 Jan 2023</td>
+                        <td>Rp 85,000</td>
+                        <td><span class="status pending">Pending</span></td>
+                        <td>
+                            <button class="btn btn-primary btn-sm">Detail</button>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>#ALF-2023-003</td>
+                        <td>Rudi Hermawan</td>
+                        <td>10 Jan 2023</td>
+                        <td>Rp 210,000</td>
+                        <td><span class="status selesai">Selesai</span></td>
+                        <td>
+                            <button class="btn btn-primary btn-sm">Detail</button>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>#ALF-2023-004</td>
+                        <td>Siti Rahayu</td>
+                        <td>09 Jan 2023</td>
+                        <td>Rp 65,000</td>
+                        <td><span class="status batal">Batal</span></td>
+                        <td>
+                            <button class="btn btn-primary btn-sm">Detail</button>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Best Selling Products -->
+        <div class="content-section">
+            <div class="section-header">
+                <h3>Produk Terlaris</h3>
+                <a href="produk.html" class="btn btn-primary">Lihat Semua</a>
+            </div>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Produk</th>
+                        <th>Harga</th>
+                        <th>Terjual</th>
+                        <th>Pendapatan</th>
+                        <th>Stok</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>Keripik Sanjai Pedas</td>
+                        <td>Rp 15,000</td>
+                        <td>320</td>
+                        <td>Rp 4,800,000</td>
+                        <td>45</td>
+                    </tr>
+                    <tr>
+                        <td>Keripik Sanjai Keju</td>
+                        <td>Rp 18,000</td>
+                        <td>280</td>
+                        <td>Rp 5,040,000</td>
+                        <td>32</td>
+                    </tr>
+                    <tr>
+                        <td>Keripik Sanjai Original</td>
+                        <td>Rp 12,000</td>
+                        <td>250</td>
+                        <td>Rp 3,000,000</td>
+                        <td>60</td>
+                    </tr>
+                    <tr>
+                        <td>Keripik Sanjai Pedas Jumbo</td>
+                        <td>Rp 35,000</td>
+                        <td>180</td>
+                        <td>Rp 6,300,000</td>
+                        <td>15</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <script>
+        // Toggle Sidebar
+        document.getElementById('menuToggle').addEventListener('click', function() {
+            document.getElementById('sidebar').classList.toggle('active');
+        });
+
+        // Logout Function
+        document.getElementById('logout').addEventListener('click', function(e) {
+            e.preventDefault();
+            localStorage.removeItem('adminAuth');
+            sessionStorage.removeItem('adminAuth');
+            window.location.href = "login.html";
+        });
+
+        // Check Authentication
+        document.addEventListener('DOMContentLoaded', function() {
+            const localAuth = localStorage.getItem('adminAuth');
+            const sessionAuth = sessionStorage.getItem('adminAuth');
+            
+            if(!localAuth && !sessionAuth) {
+                window.location.href = "login.html";
+            }
+        });
+    </script>
+</body>
+</html>
